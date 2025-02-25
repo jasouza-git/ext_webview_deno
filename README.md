@@ -30,7 +30,7 @@ Webview is published to [jsr.io](https://jsr.io/@webview/webview) and
 use JSR:
 
 ```bash
-deno add @webview/webview
+deno add jsr:@webview/webview
 ```
 
 or without the CLI:
