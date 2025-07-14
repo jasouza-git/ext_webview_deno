@@ -12,7 +12,7 @@ function encodeCString(value: string) {
 export const instances: Webview[] = [];
 
 const path = await Deno.makeTempFile({ suffix: Deno.build.os == "windows" ? ".dll" : ".dylib" });
-await Deno.writeFile(path, dll);
+await Deno.writeFile(path, Deno.build.os == "windows" ? dll : dylib);
 
 export const lib = Deno.dlopen(path, {
     "webview_create": {
