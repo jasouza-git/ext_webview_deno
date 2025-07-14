@@ -1,4 +1,4 @@
-import dll from "../webview/webview.dll" with { type: "bytes" };
+import dll from "../webview.dll" with { type: "bytes" };
 
 const encoder = new TextEncoder();
 function encodeCString(value: string) {
