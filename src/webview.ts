@@ -1,4 +1,5 @@
 import dll from "../webview.dll" with { type: "bytes" };
+import dylib from "../webview.aarch64.dylib" with { type: "bytes" };
 
 const encoder = new TextEncoder();
 function encodeCString(value: string) {
@@ -10,7 +11,7 @@ function encodeCString(value: string) {
  */
 export const instances: Webview[] = [];
 
-const path = await Deno.makeTempFile({ suffix: ".dll" });
+const path = await Deno.makeTempFile({ suffix: Deno.build.os == "windows" ? ".dll" : ".dylib" });
 await Deno.writeFile(path, dll);
 
 export const lib = Deno.dlopen(path, {
