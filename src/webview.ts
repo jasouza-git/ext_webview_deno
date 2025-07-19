@@ -1,5 +1,6 @@
-import dll from "../webview.dll" with { type: "bytes" };
-import dylib from "../webview.aarch64.dylib" with { type: "bytes" };
+// base64 -w 0 webview.dll | { read data; echo "export const bytes = Uint8Array.from(atob('$data'), c => c.charCodeAt(0));"; } > webview.dll.bytes.ts
+import { bytes as dll_win } from '../webview.dll.bytes.ts';
+import { bytes as dll_ios } from '../webview.aarch64.dylib.bytes.ts';
 
 const encoder = new TextEncoder();
 function encodeCString(value: string) {
@@ -11,10 +12,115 @@ function encodeCString(value: string) {
  */
 export const instances: Webview[] = [];
 
-const path = await Deno.makeTempFile({ suffix: Deno.build.os == "windows" ? ".dll" : ".dylib" });
-await Deno.writeFile(path, Deno.build.os == "windows" ? dll : dylib);
+const path:string = await Deno.makeTempFile({ suffix: Deno.build.os == "windows" ? ".dll" : ".dylib" });
+await Deno.writeFile(path, Deno.build.os == "windows" ? dll_win : dll_ios);
 
-export const lib = Deno.dlopen(path, {
+type ForeignFunctionParameter =
+  | "u8"
+  | "i8"
+  | "u16"
+  | "i16"
+  | "u32"
+  | "i32"
+  | "u64"
+  | "i64"
+  | "usize"
+  | "isize"
+  | "f32"
+  | "f64"
+  | "pointer"
+  | "buffer"
+  | "function";
+
+type ForeignFunctionResult =
+  | "void"
+  | "u8"
+  | "i8"
+  | "u16"
+  | "i16"
+  | "u32"
+  | "i32"
+  | "u64"
+  | "i64"
+  | "usize"
+  | "isize"
+  | "f32"
+  | "f64"
+  | "pointer";
+
+type ForeignFunction = {
+  parameters: readonly ForeignFunctionParameter[];
+  result: ForeignFunctionResult;
+};
+
+interface ForeignLibraryInterface {
+  [name: string]: ForeignFunction;
+}
+
+export interface lib_type {
+  readonly [key: string]: {
+    readonly parameters: readonly ForeignFunctionParameter[];
+    readonly result: ForeignFunctionResult;
+  };
+  readonly webview_create: {
+    readonly parameters: readonly ["i32", "pointer"];
+    readonly result: "pointer";
+  };
+  readonly webview_destroy: {
+    readonly parameters: readonly ["pointer"];
+    readonly result: "void";
+  };
+  readonly webview_run: {
+    readonly parameters: ["pointer"],
+    readonly result: "void",
+  };
+  readonly webview_terminate: {
+    readonly parameters: ["pointer"],
+    readonly result: "void",
+  };
+  readonly webview_get_window: {
+    readonly parameters: ["pointer"],
+    readonly result: "pointer",
+  };
+  readonly webview_set_title: {
+    readonly parameters: ["pointer", "buffer"],
+    readonly result: "void",
+  };
+  readonly webview_set_size: {
+    readonly parameters: ["pointer", "i32", "i32", "i32"],
+    readonly result: "void",
+  };
+  readonly webview_navigate: {
+    readonly parameters: ["pointer", "buffer"],
+    readonly result: "void",
+  };
+  readonly webview_set_html: {
+    readonly parameters: ["pointer", "pointer"],
+    readonly result: "void",
+  };
+  readonly webview_init: {
+    readonly parameters: ["pointer", "buffer"],
+    readonly result: "void",
+  };
+  readonly webview_eval: {
+    readonly parameters: ["pointer", "buffer"],
+    readonly result: "void",
+  };
+  readonly webview_bind: {
+    readonly parameters: ["pointer", "buffer", "function", "pointer"],
+    readonly result: "void",
+  };
+  readonly webview_unbind: {
+    readonly parameters: ["pointer", "buffer"],
+    readonly result: "void",
+  };
+  readonly webview_return: {
+    readonly parameters: ["pointer", "buffer", "i32", "buffer"],
+    readonly result: "void",
+  };
+};
+
+export const lib:Deno.DynamicLibrary<lib_type> = Deno.dlopen(path, {
     "webview_create": {
       parameters: ["i32", "pointer"],
       result: "pointer",

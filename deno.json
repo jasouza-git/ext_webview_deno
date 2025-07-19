@@ -1,5 +1,5 @@
 {
-  "name": "@webview/webview",
+  "name": "@jsz/webview",
   "version": "0.9.0",
   "exports": "./mod.ts",
   "lock": false,
@@ -8,7 +8,7 @@
     "run": "deno task build && export PLUGIN_URL=\"./build/\" && deno run -A --unstable-ffi",
     "run:fast": "export PLUGIN_URL=\"./build/\" && deno run -A --unstable-ffi"
   },
-  "unstable": ["ffi"],
+  "unstable": ["ffi", "-raw-imports"],
   "fmt": {
     "exclude": ["webview/"]
   },
